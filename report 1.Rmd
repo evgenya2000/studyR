@@ -1,0 +1,25 @@
+---
+title: "lab1"
+author: "Evgeniya Lukyanova"
+output: html_document
+---
+
+## Задание 1
+
+```{r}
+setwd("D:/ForGit/Projects/R/studyR/data")
+data <- read.csv("lab1_e1.csv")
+source("../scripts/lab1_1.R")
+f_data <- fix_data(data)
+str(f_data)
+```
+
+## Задание 2
+
+```{r}
+setwd("D:/ForGit/Projects/R/studyR/data")
+load("lab1_e2.Rdata")
+source("../scripts/lab1_2.R")
+f_table <- get_id(all_data)
+f_table
+```
