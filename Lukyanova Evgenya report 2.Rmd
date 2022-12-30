@@ -1,0 +1,70 @@
+---
+title: "lab2"
+author: "Evgeniya Lukyanova"
+output: html_document
+---
+
+## Задание 1 (11 вариант)
+
+Я 14 вариант, но Regions.csv побитый, поэтому я взяла 11 вариант, потому что он похож на моё задание.
+
+Используйте файл RH_T.csv Напишите функцию, которая находит 2 соседних дня с максимальным перепадом температуры.
+
+```{r}
+
+max_difference <- function(day, temp) {
+   n = 1
+   dif <- abs(temp[n] - temp[n + 1])
+   for (i in 2 : length(temp)-1) {
+     tmp <- abs(temp[i] - temp[i + 1])
+     if (tmp > dif) {
+        dif <- tmp
+        n <- i
+     }
+   }
+   return(c(day[n], day[n + 1], dif))
+}
+
+setwd("./data") 
+data <- read.csv("RH_T.csv")
+result <- max_difference(unlist(data["YYYYMMDD"]), unlist(data["T2M"]))
+
+print(result)
+```
+
+## Задание 2 (2 вариант)
+
+Используйте файл ExpImp.Rdata Напишите функцию, в которой пользователь подает на вход название субъекта федерации или федерального округа и получает на выходе получает два списка: в первом списке названия тех отраслей промышленности, по которым экспорт превышает импорт, а во втором - названия тех отраслей промышленности, по которым импорт превышает экспорт.
+
+```{r}
+statistics_output <- function(full_table, name_region){
+  column_name <- colnames(full_table)
+  str_region <- subset(full_table, Регион == name_region)
+  col_1 <- list()
+  col_2 <- list()
+  j = 1
+  k = 1
+  for (i in seq(2, length(column_name)-1, by=2)) {
+    name1 <- column_name[i]
+    i = i + 1
+    name2 <- column_name[i]
+    if (as.double(str_region[name1]) > as.double(str_region[name2])){
+      col_1[j] <- name1
+      j = j + 1
+    }else{
+      col_2[k] <- name2
+      k = k + 1
+    }
+    
+  }
+  return(list(col_1, col_2))
+}
+
+setwd("./data") 
+load("ExpImp.Rdata")
+# source("../scripts/lab2.R")
+name_region = 'Российская Федерация'
+result = statistics_output(ExpImp, name_region)
+print(result)
+rm(ExpImp)
+```

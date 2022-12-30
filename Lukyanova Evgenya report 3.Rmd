@@ -1,0 +1,179 @@
+---
+title: "lab3"
+author: "Evgeniya Lukyanova"
+output: html_document
+---
+
+## Задание 1 (14 вариант)
+
+data2.csv, data1.txt Объедините data.frames по идентификаторам сортов. Исключите те сорта, для которых есть пропущенные значения. Для всех наблюдаемых величин из файла test_data1.txt (из первого дз), в которых содержится не более 80% пропущенных значений нарисовать гистограммы. Найтите корреляции Пирсона для количественных переменных. Постройте тепловую карту (heatmap).
+
+data2.csv, data1.txt Объедините data.frames по идентификаторам сортов. Исключите те сорта, для которых есть пропущенные значения.
+
+```{r}
+library(stringr)
+library(tidyr)
+library(ggplot2)
+setwd("./data")
+
+countable_signs_unf <- read.csv("data2.csv")
+countable_signs <- countable_signs_unf |> pivot_longer(!X, names_to = "Sample", values_to = "vals", values_drop_na = TRUE) |>
+  pivot_wider(names_from = X, values_from = vals)
+
+quality_signs_unf <- read.table("data1.txt", header = TRUE, skip = 1,)
+quality_signs <- quality_signs_unf[, colnames(quality_signs_unf)[2:5]] |> drop_na()
+
+res <- merge(countable_signs, quality_signs, by = "Sample")
+
+res
+```
+
+Для всех наблюдаемых величин из файла data1.txt (из первого дз), в которых содержится не более 80% пропущенных значений нарисовать гистограммы.
+
+```{r}
+setwd("./data")
+
+df <- read.table("data1.txt", header = TRUE, skip = 1,)
+df <- quality_signs_unf[, colnames(quality_signs_unf)[2:5]]
+# Условие про 80 процентов очень странное, там везде меньше 80 процентов
+# Строим гистограмму для Height:
+hist(df$Height, main = "Histogram of height", xlab = "Height")
+# Строим гистограмму для Height:
+hist(df$Protein, main = "Histogram of protein", xlab = "Protein")
+# Строим гистограмму для Height:
+hist(df$Oil, main = "Histogram of oil", xlab = "Oil")
+
+```
+
+```{r}
+fixed <- drop_na(df)[2:4]
+cormat <- cor(fixed)
+heatmap(cormat)
+```
+
+## Задание 2 (5 вариант)
+
+trades.RData
+
+1.  Объедините таблицы в одну, уберите столбец с территорией торговли, т.к. там только Евросоюз, оставим только строки с экспортом и импортом, вынесете данные по экспорту и импорту в отдельные переменные.
+2.  Отобразите структуру экспорта продукции из Евросоюза по ведущим партнерам в виде круговых диаграмм на одном рисунке.
+
+Обозначьте разные группы экспортируемых товаров разными цветами.
+
+3.  Для каждого партнера подпишите значение экспорта.
+4.  Отрегулируйте местоположение подписей так, чтобы рисунок был максимально наглядным. Придумайте новые названия графика и осей.
+
+```{r}
+setwd("./data") 
+load("trades.Rdata")
+#1
+len = length(trades)
+rdf <- trades[[1]]
+for (i in seq(2, len)){
+  rdf <- rbind(rdf, trades[[i]])
+}
+rdf <- subset(rdf, select = - c(geo))
+importdf = rdf[rdf$indic_et == 'Share of imports by partner (%)',]
+exportdf = rdf[rdf$indic_et == 'Share of exports by partner (%)',]
+
+
+food <- exportdf[exportdf$sitc06 == 'Food, drinks and tobacco',]
+food <- subset(food, select = - c(indic_et, sitc06, time))
+math <- exportdf[exportdf$sitc06 == 'Raw materials',]
+math <- subset(math, select = - c(indic_et, sitc06, time))
+mineral <- exportdf[exportdf$sitc06 == 'Mineral fuels, lubricants and related materials',]
+mineral <- subset(mineral, select = - c(indic_et, sitc06, time))
+chem <- exportdf[exportdf$sitc06 == 'Chemicals and related products, n.e.s.',]
+chem <- subset(chem, select = - c(indic_et, sitc06, time))
+mach <- exportdf[exportdf$sitc06 == 'Machinery and transport equipment',]
+mach <- subset(mach, select = - c(indic_et, sitc06, time))
+other <- exportdf[exportdf$sitc06 == 'Other manufactured goods',]
+other <- subset(other, select = - c(indic_et, sitc06, time))
+
+
+p_food <- food$partner
+p_food <- p_food[!duplicated(p_food)]
+val_food <- list()
+for (i in seq(1, length(p_food))){
+  val_food[i] <- with (food, sum (values[partner == p_food[i]]))
+}
+v_food <- unlist(val_food)
+p1 <- pie(v_food, v_food, radius = 1, main = "Food, drinks and tobacco",col = rainbow(length(v_food)))
+
+legend("bottomleft", p_food, cex = 0.5, fill = rainbow(length(v_food)))
+
+
+
+
+
+```
+
+```{r}
+p_math <- math$partner
+p_math <- p_math[!duplicated(p_math)]
+val_math <- list()
+for (i in seq(1, length(p_math))){
+  val_math[i] <- with (math, sum (values[partner == p_math[i]]))
+}
+v_math <- unlist(val_math)
+p2 <- pie(v_math, v_math, radius = 1, main = "Raw materials", col = rainbow(length(v_math)))
+legend("bottomleft", p_math, cex = 0.5,
+   fill = rainbow(length(v_math)))
+
+
+```
+
+```{r}
+p_mineral <- mineral$partner
+p_mineral <- p_mineral[!duplicated(p_mineral)]
+val_mineral <- list()
+for (i in seq(1, length(p_mineral))){
+  val_mineral[i] <- with (mineral, sum (values[partner == p_mineral[i]]))
+}
+v_mineral <- unlist(val_mineral)
+p2 <- pie(v_mineral, v_mineral, radius = 1, main = "Mineral fuels, lubricants and related materials", col = rainbow(length(v_mineral)))
+legend("bottomleft", p_mineral, cex = 0.5,
+   fill = rainbow(length(v_mineral)))
+
+```
+
+```{r}
+p_chem <- chem$partner
+p_chem <- p_chem[!duplicated(p_chem)]
+val_chem <- list()
+for (i in seq(1, length(p_chem))){
+  val_chem[i] <- with (chem, sum (values[partner == p_chem[i]]))
+}
+v_chem <- unlist(val_chem)
+p2 <- pie(v_chem, v_chem, radius = 1, main = "Chemicals and related products, n.e.s.", col = rainbow(length(v_chem)))
+legend("bottomright", p_chem, cex = 0.5,
+   fill = rainbow(length(v_chem)))
+
+```
+
+```{r}
+p_mach <- mach$partner
+p_mach <- p_mach[!duplicated(p_mach)]
+val_mach <- list()
+for (i in seq(1, length(p_mach))){
+  val_mach[i] <- with (mach, sum (values[partner == p_mach[i]]))
+}
+v_mach <- unlist(val_mach)
+p2 <- pie(v_mach, v_mach, radius = 1, main = "Machinery and transport equipment", col = rainbow(length(v_mach)))
+legend("bottomleft", p_mach, cex = 0.5,
+   fill = rainbow(length(v_mach)))
+```
+
+```{r}
+
+p_other <- other$partner
+p_other <- p_other[!duplicated(p_other)]
+val_other <- list()
+for (i in seq(1, length(p_other))){
+  val_other[i] <- with (other, sum (values[partner == p_other[i]]))
+}
+v_other <- unlist(val_other)
+p2 <- pie(v_other, v_other, radius = 1, main = "Other manufactured goods", col = rainbow(length(v_other)))
+legend("bottomleft", p_other, cex = 0.5,
+   fill = rainbow(length(v_other)))
+```
